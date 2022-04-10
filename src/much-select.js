@@ -275,6 +275,15 @@ class MuchSelect extends HTMLElement {
     this._selectedValueEncoding = "comma";
 
     /**
+     * Specify how the much-select should be rendered. The following styles are all options
+     *  - customHtml (default)
+     *  - datalist
+     * @type {string}
+     * @private
+     */
+    this._outputStyle = "customHtml";
+
+    /**
      * @type {null|object}
      * @private
      */
@@ -361,6 +370,7 @@ class MuchSelect extends HTMLElement {
       "multi-select",
       "multi-select-single-item-removal",
       "option-sorting",
+      "output-style",
       "placeholder",
       "search-string-minimum-length",
       "selected-option-goes-to-top",
@@ -409,6 +419,10 @@ class MuchSelect extends HTMLElement {
     } else if (name === "option-sorting") {
       if (oldValue !== newValue) {
         this.optionSorting = newValue;
+      }
+    } else if (name === "output-style") {
+      if (oldValue !== newValue) {
+        this.outputStyle = newValue;
       }
     } else if (name === "search-string-minimum-length") {
       if (oldValue !== newValue) {
@@ -869,6 +883,15 @@ class MuchSelect extends HTMLElement {
       flags.optionSort = this.getAttribute("option-sorting");
     } else {
       flags.optionSort = "no-sorting";
+    }
+
+    if (
+      this.hasAttribute("output-style") &&
+      MuchSelect.isValidOutputStyle(this.getAttribute("output-style"))
+    ) {
+      flags.outputStyle = this.getAttribute("output-style");
+    } else {
+      flags.outputStyle = this.outputStyle;
     }
 
     flags.disabled = this.disabled;
@@ -1544,6 +1567,31 @@ class MuchSelect extends HTMLElement {
     this.appPromise.then((app) =>
       app.ports.optionSortingChangedReceiver.send(this._optionSorting)
     );
+  }
+
+  /**
+   * @param {string} outputStyle
+   * @return boolean
+   * */
+  static isValidOutputStyle(outputStyle) {
+    return ["customHtml", "datalist"].includes(outputStyle);
+  }
+
+  get outputStyle() {
+    return this._outputStyle;
+  }
+
+  set outputStyle(value) {
+    if (MuchSelect.isValidOutputStyle(value)) {
+      this._outputStyle = value;
+
+      // noinspection JSUnresolvedVariable
+      this.appPromise.then((app) =>
+        app.ports.outputStyleChangedReceiver.send(this._outputStyle)
+      );
+    } else {
+      throw new Error(`Invalid output style: ${value}`);
+    }
   }
 
   // eslint-disable-next-line class-methods-use-this

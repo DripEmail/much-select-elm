@@ -1397,7 +1397,7 @@ selectHighlightedOption selectionMode options =
                                         selectOptionInListByOptionValue value options
                                             |> clearAnyUnselectedCustomOptions
 
-                                    SingleSelect _ _ ->
+                                    SingleSelect _ _ _ ->
                                         selectSingleOptionInList value options
 
                             CustomOption _ _ value _ ->
@@ -1405,7 +1405,7 @@ selectHighlightedOption selectionMode options =
                                     MultiSelect _ _ ->
                                         selectOptionInListByOptionValue value options
 
-                                    SingleSelect _ _ ->
+                                    SingleSelect _ _ _ ->
                                         selectSingleOptionInList value options
 
                             EmptyOption _ _ ->
@@ -1413,7 +1413,7 @@ selectHighlightedOption selectionMode options =
                                     MultiSelect _ _ ->
                                         selectEmptyOption options
 
-                                    SingleSelect _ _ ->
+                                    SingleSelect _ _ _ ->
                                         selectEmptyOption options
 
                     Nothing ->
