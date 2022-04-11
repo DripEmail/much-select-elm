@@ -68,6 +68,7 @@ module Option exposing
     , selectOptionsInList
     , selectOptionsInOptionsListByString
     , selectSingleOptionInList
+    , selectSingleOptionInListByString
     , selectedOptions
     , selectedOptionsToTuple
     , setDescriptionWithString
@@ -1445,6 +1446,11 @@ selectSingleOptionInList value options =
                 else
                     deselectOption option_
             )
+
+
+selectSingleOptionInListByString : String -> List Option -> List Option
+selectSingleOptionInListByString string options =
+    selectSingleOptionInList (stringToOptionValue string) options
 
 
 selectEmptyOption : List Option -> List Option

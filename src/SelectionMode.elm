@@ -5,6 +5,7 @@ module SelectionMode exposing
     , SelectionMode(..)
     , SingleItemRemoval(..)
     , getCustomOptions
+    , getOutputStyle
     , getSelectedItemPlacementMode
     , setAllowCustomOptionsWithBool
     , setMultiSelectModeWithBool
@@ -119,3 +120,13 @@ stringToOutputStyle string =
 
         _ ->
             Err "Invalid output style"
+
+
+getOutputStyle : SelectionMode -> OutputStyle
+getOutputStyle selectionMode =
+    case selectionMode of
+        SingleSelect _ _ outputStyle ->
+            outputStyle
+
+        MultiSelect _ _ ->
+            CustomHtml

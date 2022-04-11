@@ -51,7 +51,9 @@ import Option
         , selectHighlightedOption
         , selectOptionInListByOptionValue
         , selectSingleOptionInList
+        , selectSingleOptionInListByString
         , selectedOptionsToTuple
+        , updateOrAddCustomOption
         )
 import OptionLabel exposing (OptionLabel(..), optionLabelToString)
 import OptionPresentor exposing (tokensToHtml)
@@ -98,7 +100,16 @@ import Ports
         , valuesDecoder
         )
 import PositiveInt exposing (PositiveInt)
-import SelectionMode exposing (CustomOptions(..), OutputStyle(..), SelectedItemPlacementMode(..), SelectionMode(..), SingleItemRemoval(..), stringToOutputStyle)
+import SelectionMode
+    exposing
+        ( CustomOptions(..)
+        , OutputStyle(..)
+        , SelectedItemPlacementMode(..)
+        , SelectionMode(..)
+        , SingleItemRemoval(..)
+        , getOutputStyle
+        , stringToOutputStyle
+        )
 
 
 type Msg
@@ -111,6 +122,7 @@ type Msg
     | DropdownMouseOutOption OptionValue
     | DropdownMouseClickOption OptionValue
     | SearchInputOnInput String
+    | TextInputOnInput String
     | ValueChanged Json.Decode.Value
     | OptionsReplaced Json.Decode.Value
     | OptionSortingChanged String
@@ -220,30 +232,49 @@ update msg model =
                 ( model, blurInput () )
 
         InputBlur ->
-            let
-                optionsWithoutUnselectedCustomOptions =
-                    Option.removeUnselectedCustomOptions model.options
-                        |> Option.unhighlightSelectedOptions
-            in
-            ( { model
-                | searchString = ""
-                , options = optionsWithoutUnselectedCustomOptions
-                , showDropdown = False
-                , focused = False
-                , rightSlot = updateRightSlotTransitioning NotInFocusTransition model.rightSlot
-              }
-                |> updateModelWithChangesThatEffectTheOptions
-            , inputBlurred ()
-            )
+            case getOutputStyle model.selectionMode of
+                CustomHtml ->
+                    let
+                        optionsWithoutUnselectedCustomOptions =
+                            Option.removeUnselectedCustomOptions model.options
+                                |> Option.unhighlightSelectedOptions
+                    in
+                    ( { model
+                        | searchString = ""
+                        , options = optionsWithoutUnselectedCustomOptions
+                        , showDropdown = False
+                        , focused = False
+                        , rightSlot = updateRightSlotTransitioning NotInFocusTransition model.rightSlot
+                      }
+                        |> updateModelWithChangesThatEffectTheOptions
+                    , inputBlurred ()
+                    )
+
+                Datalist ->
+                    ( { model
+                        | focused = False
+                        , options = selectSingleOptionInListByString model.searchString model.options
+                      }
+                    , inputBlurred ()
+                    )
 
         InputFocus ->
-            ( { model
-                | showDropdown = True
-                , focused = True
-                , rightSlot = updateRightSlotTransitioning NotInFocusTransition model.rightSlot
-              }
-            , Cmd.none
-            )
+            case getOutputStyle model.selectionMode of
+                CustomHtml ->
+                    ( { model
+                        | showDropdown = True
+                        , focused = True
+                        , rightSlot = updateRightSlotTransitioning NotInFocusTransition model.rightSlot
+                      }
+                    , Cmd.none
+                    )
+
+                Datalist ->
+                    ( { model
+                        | focused = True
+                      }
+                    , Cmd.none
+                    )
 
         DropdownMouseOverOption optionValue ->
             let
@@ -311,6 +342,14 @@ update msg model =
               }
                 |> updateModelWithChangesThatEffectTheOptions
             , inputKeyUp searchString
+            )
+
+        TextInputOnInput inputString ->
+            ( { model
+                | searchString = inputString
+                , options = updateOrAddCustomOption (Just "{{}}") inputString model.options
+              }
+            , inputKeyUp inputString
             )
 
         ValueChanged valuesJson ->
@@ -1298,7 +1337,7 @@ singleSelectDatasetInputField searchString isDisabled focused placeholder_ hasSe
             , idAttr
             , onBlurAttr
             , onFocusAttr
-            , onInput SearchInputOnInput
+            , onInput TextInputOnInput
             , value searchString
             , placeholderAttribute
             , Html.Attributes.list "datalist-options"
