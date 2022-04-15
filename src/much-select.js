@@ -501,7 +501,9 @@ class MuchSelect extends HTMLElement {
     );
 
     this.appPromise.then((app) => {
-      app.ports.optionsUpdated.subscribe((optionsReplaced) => {
+      app.ports.optionsUpdated.subscribe((result) => {
+        const optionsReplaced = result[0];
+        const newOptions = result[1];
         this.dispatchEvent(
           new CustomEvent("optionsUpdated", {
             bubbles: true,
@@ -511,6 +513,10 @@ class MuchSelect extends HTMLElement {
             },
           })
         );
+        if (!this.eventsOnlyMode) {
+          console.log("newOptions", newOptions);
+          this.updateOptionInDom(newOptions);
+        }
       });
     });
 
@@ -721,6 +727,46 @@ class MuchSelect extends HTMLElement {
       const optionsJson = buildOptionsFromSelectElement(selectElement);
       this._callOptionChanged(optionsJson);
     }
+  }
+
+  //   [
+  //     {
+  //       "value": "Dancer Cowboy Morty",
+  //       "label": "Dancer Cowboy Morty",
+  //       "description": "",
+  //       "isSelected": false
+  //     },
+  // {
+  //   "value": "Cowboy Morty",
+  //   "label": "Cowboy Morty",
+  //   "description": "",
+  //   "isSelected": false
+  // },
+  // {
+  //   "value": "Cowboy Rick",
+  //   "label": "Cowboy Rick",
+  //   "description": "",
+  //   "isSelected": false
+  // }
+  // ]
+
+  updateOptionInDom(optionsData) {
+    this.stopSelectSlotObserver();
+    const selectElement = this.querySelector("select[slot='select-input']");
+    if (selectElement) {
+      const optionElements = [];
+      optionsData.forEach((optionData) => {
+        const optionEl = new Option(
+          optionData.value,
+          optionData.label,
+          optionData.isSelected
+        );
+        optionEl.setAttribute("data-description", optionData.description);
+        optionElements.push(optionEl);
+      });
+      selectElement.replaceChildren(optionElements);
+    }
+    this.startSelectSlotObserver();
   }
 
   // noinspection JSUnusedGlobalSymbols

@@ -20,6 +20,7 @@ module Option exposing
     , deselectOptions
     , emptyOptionGroup
     , encode
+    , encodeOptions
     , filterOptionsToShowInDropdown
     , filterOptionsToShowInDropdownBySearchScore
     , findHighestAutoSortRank
@@ -2465,3 +2466,8 @@ encode option =
         , ( "description", Json.Encode.string (getOptionDescription option |> optionDescriptionToString) )
         , ( "isSelected", Json.Encode.bool (isOptionSelected option) )
         ]
+
+
+encodeOptions : List Option -> Json.Decode.Value
+encodeOptions options =
+    Json.Encode.list encode options

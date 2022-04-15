@@ -351,6 +351,9 @@ update msg model =
             case Json.Decode.decodeValue Option.optionsDecoder newOptionsJson of
                 Ok newOptions ->
                     let
+                        _ =
+                            Debug.log "OptionsReplaced newOptions" newOptions
+
                         newOptionWithOldSelectedOption =
                             Option.replaceOptions
                                 model.selectionMode
@@ -361,7 +364,7 @@ update msg model =
                         | options = newOptionWithOldSelectedOption
                       }
                         |> updateModelWithChangesThatEffectTheOptions
-                    , optionsUpdated True
+                    , optionsUpdated ( True, Option.encodeOptions newOptionWithOldSelectedOption )
                     )
 
                 Err error ->
@@ -378,7 +381,7 @@ update msg model =
                         | options = updatedOptions
                       }
                         |> updateModelWithChangesThatEffectTheOptions
-                    , optionsUpdated False
+                    , optionsUpdated ( False, Option.encodeOptions updatedOptions )
                     )
 
                 Err error ->
@@ -395,7 +398,7 @@ update msg model =
                         | options = updatedOptions
                       }
                         |> updateModelWithChangesThatEffectTheOptions
-                    , optionsUpdated True
+                    , optionsUpdated ( False, Option.encodeOptions updatedOptions )
                     )
 
                 Err error ->
