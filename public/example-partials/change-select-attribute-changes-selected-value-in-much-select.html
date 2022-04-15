@@ -3,14 +3,16 @@
   <button id="select-moe">Select Moe with the selected attribute.</button>
   <much-select>
     <select slot="select-input">
-      <option>Larry</option>
+      <option id="larry">Larry</option>
       <option id="moe">Moe</option>
-      <option>Curly Joe</option>
+      <option id="joe">Curly Joe</option>
     </select>
   </much-select>
   <script>
     document.querySelector("#select-moe").addEventListener("click", () => {
+      document.querySelector("#larry").removeAttribute("selected");
       document.querySelector("#moe").setAttribute("selected", "");
+      document.querySelector("#joe").removeAttribute("selected");
     });
   </script>
 </div>

@@ -1,4 +1,13 @@
-module OptionSearchFilter exposing (OptionSearchFilter, OptionSearchResult, getLowScore, impossiblyLowScore, lowScoreCutOff, new)
+module OptionSearchFilter exposing
+    ( OptionSearchFilter
+    , OptionSearchResult
+    , descriptionHandicap
+    , getLowScore
+    , groupHandicap
+    , impossiblyLowScore
+    , lowScoreCutOff
+    , new
+    )
 
 import Fuzzy exposing (Result)
 
@@ -28,7 +37,7 @@ impossiblyLowScore =
 new : Int -> Int -> OptionSearchResult -> List ( Bool, String ) -> List ( Bool, String ) -> List ( Bool, String ) -> OptionSearchFilter
 new totalScore bestScore searchResult labelTokens descriptionTokens groupTokens =
     { totalScore = totalScore
-    , bestScore = totalScore
+    , bestScore = bestScore
     , searchResult = searchResult
     , labelTokens = labelTokens
     , descriptionTokens = descriptionTokens
@@ -40,8 +49,8 @@ getLowScore : OptionSearchResult -> Int
 getLowScore optionSearchResult =
     List.minimum
         [ optionSearchResult.labelMatch.score
-        , optionSearchResult.descriptionMatch.score
-        , optionSearchResult.groupMatch.score
+        , descriptionHandicap optionSearchResult.descriptionMatch.score
+        , groupHandicap optionSearchResult.groupMatch.score
         ]
         |> Maybe.withDefault
             impossiblyLowScore
@@ -63,3 +72,21 @@ lowScoreCutOff score =
 
     else
         impossiblyLowScore
+
+
+descriptionHandicap : Int -> Int
+descriptionHandicap score =
+    if score < 5 then
+        5
+
+    else
+        floor (toFloat score * 1.25)
+
+
+groupHandicap : Int -> Int
+groupHandicap score =
+    if score < 10 then
+        10
+
+    else
+        floor (toFloat score * 1.5)

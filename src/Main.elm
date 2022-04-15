@@ -386,7 +386,7 @@ update msg model =
                     let
                         newOptionWithOldSelectedOption =
                             Option.replaceOptions
-                                (SelectionMode.getSelectedItemPlacementMode model.selectionMode)
+                                model.selectionMode
                                 model.options
                                 newOptions
                     in
