@@ -2,9 +2,7 @@
   <h3>Remote API</h3>
   <p>As you type we'll query the remote API for additional options.</p>
   <p>This dropdown searches the <a href="https://rickandmortyapi.com/">Rick and Morty</a> API for characters from the show by name.</p>
-  <much-select max-dropdown-items="3">
-    <select slot="select-input"></select>
-  </much-select>
+  <much-select></much-select>
 
   <script>
     (() => {
@@ -37,6 +35,9 @@
                 // noinspection JSUnresolvedVariable
                 muchSelect.addOption({ value: result.name });
               });
+              muchSelect.loading = false;
+            })
+            .catch(() => {
               muchSelect.loading = false;
             });
         };
