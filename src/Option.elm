@@ -775,7 +775,7 @@ replaceOptions selectionMode oldOptions newOptions =
             selectedOptions oldOptions
     in
     case selectionMode of
-        SingleSelect _ selectedItemPlacementMode ->
+        SingleSelect _ selectedItemPlacementMode _ ->
             let
                 maybeSelectedOptionValue =
                     selectedOptions (newOptions ++ oldOptions)
