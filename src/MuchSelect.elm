@@ -224,6 +224,7 @@ type Effect
     | ReportReady
     | ReportInitialValueSet Json.Encode.Value
     | FetchOptionsFromDom
+    | FetchOptionsForDomSteady
     | ScrollDownToElement String
     | ReportAllOptions Json.Encode.Value
     | DumpConfigState Json.Encode.Value
@@ -280,6 +281,7 @@ type Msg
     | AddMultiSelectValue Int
     | RemoveMultiSelectValue Int
     | RequestAllOptions
+    | RequestAllOptionsSteady
     | UpdateSearchResultsForOptions Json.Encode.Value
     | CustomValidationResponse Json.Encode.Value
     | UpdateTransformationAndValidation Json.Encode.Value
@@ -304,6 +306,7 @@ type alias Model =
     , rightSlot : RightSlot
     , valueCasing : ValueCasing
     , selectedValueEncoding : SelectedValueEncoding
+    , getOptionsFromTheDomBounce : Bounce
     }
 
 
@@ -544,6 +547,11 @@ update msg model =
                     model.searchStringNonce
                     (SearchString.isCleared model.searchString)
                 )
+            )
+
+        RequestAllOptionsSteady ->
+            ( model
+            , FetchOptionsForDomSteady
             )
 
         UpdateOptionValueValue selectedValueIndex valueString ->
@@ -977,6 +985,8 @@ update msg model =
                                 newSelectionConfig
                                 True
                                 model.options
+                        , getOptionsFromTheDomBounce =
+                            Bounce.push model.getOptionsFromTheDomBounce
                       }
                     , Batch
                         [ FetchOptionsFromDom
@@ -1478,6 +1488,8 @@ update msg model =
                             ( { model
                                 | selectionConfig = newSelectionConfig
                                 , rightSlot = updateRightSlot model.rightSlot newSelectionConfig True model.options
+                                , getOptionsFromTheDomBounce =
+                                    Bounce.push model.getOptionsFromTheDomBounce
                               }
                             , FetchOptionsFromDom
                             )
@@ -1534,6 +1546,16 @@ update msg model =
                 "selected-value" ->
                     case SelectedValueEncoding.stringToValueStrings model.selectedValueEncoding newAttributeValue of
                         Ok selectedValueStrings ->
+                            let
+                                _ =
+                                    Debug.log "OptionsUtilities.selectedOptionValuesAreEqual" (OptionsUtilities.selectedOptionValuesAreEqual selectedValueStrings model.options)
+
+                                _ =
+                                    Debug.log "selectedValueStrings" selectedValueStrings
+
+                                _ =
+                                    Debug.log "model.options" model.options
+                            in
                             if OptionsUtilities.selectedOptionValuesAreEqual selectedValueStrings model.options then
                                 ( model, NoEffect )
 
@@ -1706,6 +1728,8 @@ update msg model =
                     ( { model
                         | selectionConfig = newSelectionConfig
                         , rightSlot = updateRightSlot model.rightSlot newSelectionConfig True model.options
+                        , getOptionsFromTheDomBounce =
+                            Bounce.push model.getOptionsFromTheDomBounce
                       }
                     , FetchOptionsFromDom
                     )
@@ -1873,6 +1897,9 @@ perform effect =
             muchSelectIsReady ()
 
         FetchOptionsFromDom ->
+            Bounce.delay 100 RequestAllOptionsSteady
+
+        FetchOptionsForDomSteady ->
             updateOptionsFromDom ()
 
         ScrollDownToElement string ->
@@ -3712,6 +3739,7 @@ init flags =
       -- TODO Should the value casing's initial values be passed in as flags?
       , valueCasing = ValueCasing 100 45
       , selectedValueEncoding = selectedValueEncoding
+      , getOptionsFromTheDomBounce = Bounce.init
       }
     , batch
         [ errorEffect
@@ -3964,6 +3992,9 @@ effectToDebuggingString effect =
 
         FetchOptionsFromDom ->
             "FetchOptionsFromDom"
+
+        FetchOptionsForDomSteady ->
+            "FetchOptionsForDomSteady"
 
         ScrollDownToElement _ ->
             "ScrollDownToElement"

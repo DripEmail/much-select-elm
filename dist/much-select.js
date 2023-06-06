@@ -427,6 +427,9 @@ class MuchSelect extends HTMLElement {
             hiddenValueInput.dispatchEvent(
               new Event("change", { bubbles: true })
             );
+            hiddenValueInput.dispatchEvent(
+              new Event("input", { bubbles: true })
+            );
           }
 
           this.startMuchSelectObserver();
