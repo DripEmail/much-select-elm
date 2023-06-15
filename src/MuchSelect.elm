@@ -2319,9 +2319,9 @@ multiSelectViewCustomHtml selectionConfig options searchString rightSlot =
         inputFilter =
             input
                 [ type_ "text"
-                , onBlur InputBlur
-                , onFocus InputFocus
-                , onInput UpdateSearchString
+                , attributeIf (not (isDisabled selectionConfig)) (onBlur InputBlur)
+                , attributeIf (not (isDisabled selectionConfig)) (onFocus InputFocus)
+                , attributeIf (not (isDisabled selectionConfig)) (onInput UpdateSearchString)
                 , onMouseDownStopPropagation NoOp
                 , onMouseUpStopPropagation NoOp
                 , value (SearchString.toString searchString)
@@ -2329,12 +2329,14 @@ multiSelectViewCustomHtml selectionConfig options searchString rightSlot =
                 , id "input-filter"
                 , Html.Attributes.attribute "part" "input-filter"
                 , disabled (isDisabled selectionConfig)
-                , Keyboard.on Keyboard.Keydown
-                    [ ( Enter, SelectHighlightedOption )
-                    , ( Escape, EscapeKeyInInputFilter )
-                    , ( ArrowUp, MoveHighlightedOptionUp )
-                    , ( ArrowDown, MoveHighlightedOptionDown )
-                    ]
+                , attributeIf (not (isDisabled selectionConfig))
+                    (Keyboard.on Keyboard.Keydown
+                        [ ( Enter, SelectHighlightedOption )
+                        , ( Escape, EscapeKeyInInputFilter )
+                        , ( ArrowUp, MoveHighlightedOptionUp )
+                        , ( ArrowDown, MoveHighlightedOptionDown )
+                        ]
+                    )
                 ]
                 []
     in
@@ -2343,18 +2345,23 @@ multiSelectViewCustomHtml selectionConfig options searchString rightSlot =
         , valueCasingPartsAttribute selectionConfig hasErrors hasPendingValidation
 
         -- TODO On mouse down do something to provide a bit of feedback
-        , onMouseDown NoOp
-        , onMouseUp BringInputInFocus
-        , onFocus BringInputInFocus
-        , Keyboard.on Keyboard.Keydown
-            [ ( Delete, DeleteKeydownForMultiSelect )
-            , ( Backspace, DeleteKeydownForMultiSelect )
-            ]
+        , attributeIf (not (isDisabled selectionConfig)) (onMouseDown NoOp)
+        , attributeIf (not (isDisabled selectionConfig)) (onMouseUp BringInputInFocus)
+        , attributeIf (not (isDisabled selectionConfig)) (onFocus BringInputInFocus)
+        , attributeIf (not (isDisabled selectionConfig))
+            (Keyboard.on Keyboard.Keydown
+                [ ( Delete, DeleteKeydownForMultiSelect )
+                , ( Backspace, DeleteKeydownForMultiSelect )
+                ]
+            )
         , tabIndexAttribute (isDisabled selectionConfig)
         , classList
             (valueCasingClassList selectionConfig hasOptionSelected False)
         ]
-        (optionsToValuesHtml options (getSingleItemRemoval selectionConfig)
+        (optionsToValuesHtml
+            options
+            (getSingleItemRemoval selectionConfig)
+            (SelectionMode.getInteractionState selectionConfig)
             ++ [ inputFilter
                , rightSlotHtml
                     rightSlot
@@ -3102,16 +3109,16 @@ optionToDropdownOption eventHandlers selectionConfig_ option_ =
         option_
 
 
-optionsToValuesHtml : List Option -> SingleItemRemoval -> List (Html Msg)
-optionsToValuesHtml options enableSingleItemRemoval =
+optionsToValuesHtml : List Option -> SingleItemRemoval -> SelectionMode.InteractionState -> List (Html Msg)
+optionsToValuesHtml options enableSingleItemRemoval interactionState =
     options
         |> selectedOptions
         |> List.sortBy Option.getOptionSelectedIndex
-        |> List.map (Html.Lazy.lazy2 optionToValueHtml enableSingleItemRemoval)
+        |> List.map (Html.Lazy.lazy3 optionToValueHtml enableSingleItemRemoval interactionState)
 
 
-optionToValueHtml : SingleItemRemoval -> Option -> Html Msg
-optionToValueHtml enableSingleItemRemoval option =
+optionToValueHtml : SingleItemRemoval -> SelectionMode.InteractionState -> Option -> Html Msg
+optionToValueHtml enableSingleItemRemoval interactionState option =
     let
         removalHtml =
             case enableSingleItemRemoval of
@@ -3141,7 +3148,7 @@ optionToValueHtml enableSingleItemRemoval option =
                         [ class "value"
                         , partAttr
                         ]
-                        [ valueLabelHtml (OptionLabel.getLabelString optionLabel) optionValue, removalHtml ]
+                        [ valueLabelHtml interactionState (OptionLabel.getLabelString optionLabel) optionValue, removalHtml ]
 
                 OptionSelectedPendingValidation _ ->
                     text ""
@@ -3157,7 +3164,7 @@ optionToValueHtml enableSingleItemRemoval option =
                             ]
                         , highlightPartAttr
                         ]
-                        [ valueLabelHtml (OptionLabel.getLabelString optionLabel) optionValue, removalHtml ]
+                        [ valueLabelHtml interactionState (OptionLabel.getLabelString optionLabel) optionValue, removalHtml ]
 
                 OptionHighlighted ->
                     text ""
@@ -3181,7 +3188,7 @@ optionToValueHtml enableSingleItemRemoval option =
                         [ class "value"
                         , partAttr
                         ]
-                        [ valueLabelHtml (OptionLabel.getLabelString optionLabel) optionValue, removalHtml ]
+                        [ valueLabelHtml interactionState (OptionLabel.getLabelString optionLabel) optionValue, removalHtml ]
 
                 OptionSelectedPendingValidation _ ->
                     text ""
@@ -3197,7 +3204,7 @@ optionToValueHtml enableSingleItemRemoval option =
                             ]
                         , highlightPartAttr
                         ]
-                        [ valueLabelHtml (OptionLabel.getLabelString optionLabel) optionValue, removalHtml ]
+                        [ valueLabelHtml interactionState (OptionLabel.getLabelString optionLabel) optionValue, removalHtml ]
 
                 OptionHighlighted ->
                     text ""
@@ -3241,12 +3248,21 @@ optionToValueHtml enableSingleItemRemoval option =
             text ""
 
 
-valueLabelHtml : String -> OptionValue -> Html Msg
-valueLabelHtml labelText optionValue =
+valueLabelHtml : SelectionMode.InteractionState -> String -> OptionValue -> Html Msg
+valueLabelHtml interactionState labelText optionValue =
     span
         [ class "value-label"
-        , mouseUpPreventDefault
-            (ToggleSelectedValueHighlight optionValue)
+        , case interactionState of
+            SelectionMode.Focused ->
+                mouseUpPreventDefault
+                    (ToggleSelectedValueHighlight optionValue)
+
+            SelectionMode.Unfocused ->
+                mouseUpPreventDefault
+                    (ToggleSelectedValueHighlight optionValue)
+
+            SelectionMode.Disabled ->
+                Html.Attributes.Extra.empty
         ]
         [ text labelText ]
 

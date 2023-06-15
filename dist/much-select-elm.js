@@ -14110,6 +14110,10 @@ var $author$project$MuchSelect$SelectHighlightedOption = {$: 32};
 var $author$project$MuchSelect$UpdateSearchString = function (a) {
 	return {$: 9, a: a};
 };
+var $elm_community$html_extra$Html$Attributes$Extra$attributeIf = F2(
+	function (condition, attr) {
+		return condition ? attr : $elm_community$html_extra$Html$Attributes$Extra$empty;
+	});
 var $elm$html$Html$Attributes$boolProperty = F2(
 	function (key, bool) {
 		return A2(
@@ -14641,6 +14645,8 @@ var $author$project$MuchSelect$onMouseUpStopPropagation = function (message) {
 		$elm$json$Json$Decode$succeed(
 			{A: message, B: false, C: true}));
 };
+var $elm$virtual_dom$VirtualDom$lazy3 = _VirtualDom_lazy3;
+var $elm$html$Html$Lazy$lazy3 = $elm$virtual_dom$VirtualDom$lazy3;
 var $author$project$MuchSelect$DeselectOptionInternal = function (a) {
 	return {$: 20, a: a};
 };
@@ -14651,23 +14657,33 @@ var $author$project$OptionLabel$getLabelString = function (optionLabel) {
 var $author$project$MuchSelect$ToggleSelectedValueHighlight = function (a) {
 	return {$: 39, a: a};
 };
-var $author$project$MuchSelect$valueLabelHtml = F2(
-	function (labelText, optionValue) {
+var $author$project$MuchSelect$valueLabelHtml = F3(
+	function (interactionState, labelText, optionValue) {
 		return A2(
 			$elm$html$Html$span,
 			_List_fromArray(
 				[
 					$elm$html$Html$Attributes$class('value-label'),
-					$author$project$MuchSelect$mouseUpPreventDefault(
-					$author$project$MuchSelect$ToggleSelectedValueHighlight(optionValue))
+					function () {
+					switch (interactionState) {
+						case 0:
+							return $author$project$MuchSelect$mouseUpPreventDefault(
+								$author$project$MuchSelect$ToggleSelectedValueHighlight(optionValue));
+						case 1:
+							return $author$project$MuchSelect$mouseUpPreventDefault(
+								$author$project$MuchSelect$ToggleSelectedValueHighlight(optionValue));
+						default:
+							return $elm_community$html_extra$Html$Attributes$Extra$empty;
+					}
+				}()
 				]),
 			_List_fromArray(
 				[
 					$elm$html$Html$text(labelText)
 				]));
 	});
-var $author$project$MuchSelect$optionToValueHtml = F2(
-	function (enableSingleItemRemoval, option) {
+var $author$project$MuchSelect$optionToValueHtml = F3(
+	function (enableSingleItemRemoval, interactionState, option) {
 		var removalHtml = function () {
 			if (!enableSingleItemRemoval) {
 				return A2(
@@ -14708,8 +14724,9 @@ var $author$project$MuchSelect$optionToValueHtml = F2(
 								]),
 							_List_fromArray(
 								[
-									A2(
+									A3(
 									$author$project$MuchSelect$valueLabelHtml,
+									interactionState,
 									$author$project$OptionLabel$getLabelString(optionLabel),
 									optionValue),
 									removalHtml
@@ -14733,8 +14750,9 @@ var $author$project$MuchSelect$optionToValueHtml = F2(
 								]),
 							_List_fromArray(
 								[
-									A2(
+									A3(
 									$author$project$MuchSelect$valueLabelHtml,
+									interactionState,
 									$author$project$OptionLabel$getLabelString(optionLabel),
 									optionValue),
 									removalHtml
@@ -14765,8 +14783,9 @@ var $author$project$MuchSelect$optionToValueHtml = F2(
 								]),
 							_List_fromArray(
 								[
-									A2(
+									A3(
 									$author$project$MuchSelect$valueLabelHtml,
+									interactionState,
 									$author$project$OptionLabel$getLabelString(optionLabel),
 									optionValue),
 									removalHtml
@@ -14790,8 +14809,9 @@ var $author$project$MuchSelect$optionToValueHtml = F2(
 								]),
 							_List_fromArray(
 								[
-									A2(
+									A3(
 									$author$project$MuchSelect$valueLabelHtml,
+									interactionState,
 									$author$project$OptionLabel$getLabelString(optionLabel),
 									optionValue),
 									removalHtml
@@ -14841,11 +14861,11 @@ var $author$project$MuchSelect$optionToValueHtml = F2(
 				return $elm$html$Html$text('');
 		}
 	});
-var $author$project$MuchSelect$optionsToValuesHtml = F2(
-	function (options, enableSingleItemRemoval) {
+var $author$project$MuchSelect$optionsToValuesHtml = F3(
+	function (options, enableSingleItemRemoval, interactionState) {
 		return A2(
 			$elm$core$List$map,
-			A2($elm$html$Html$Lazy$lazy2, $author$project$MuchSelect$optionToValueHtml, enableSingleItemRemoval),
+			A3($elm$html$Html$Lazy$lazy3, $author$project$MuchSelect$optionToValueHtml, enableSingleItemRemoval, interactionState),
 			A2(
 				$elm$core$List$sortBy,
 				$author$project$Option$getOptionSelectedIndex,
@@ -15183,9 +15203,18 @@ var $author$project$MuchSelect$multiSelectViewCustomHtml = F4(
 			_List_fromArray(
 				[
 					$elm$html$Html$Attributes$type_('text'),
-					$elm$html$Html$Events$onBlur($author$project$MuchSelect$InputBlur),
-					$elm$html$Html$Events$onFocus($author$project$MuchSelect$InputFocus),
-					$elm$html$Html$Events$onInput($author$project$MuchSelect$UpdateSearchString),
+					A2(
+					$elm_community$html_extra$Html$Attributes$Extra$attributeIf,
+					!$author$project$SelectionMode$isDisabled(selectionConfig),
+					$elm$html$Html$Events$onBlur($author$project$MuchSelect$InputBlur)),
+					A2(
+					$elm_community$html_extra$Html$Attributes$Extra$attributeIf,
+					!$author$project$SelectionMode$isDisabled(selectionConfig),
+					$elm$html$Html$Events$onFocus($author$project$MuchSelect$InputFocus)),
+					A2(
+					$elm_community$html_extra$Html$Attributes$Extra$attributeIf,
+					!$author$project$SelectionMode$isDisabled(selectionConfig),
+					$elm$html$Html$Events$onInput($author$project$MuchSelect$UpdateSearchString)),
 					$author$project$MuchSelect$onMouseDownStopPropagation($author$project$MuchSelect$NoOp),
 					$author$project$MuchSelect$onMouseUpStopPropagation($author$project$MuchSelect$NoOp),
 					$elm$html$Html$Attributes$value(
@@ -15196,15 +15225,18 @@ var $author$project$MuchSelect$multiSelectViewCustomHtml = F4(
 					$elm$html$Html$Attributes$disabled(
 					$author$project$SelectionMode$isDisabled(selectionConfig)),
 					A2(
-					$robinheghan$keyboard_events$Keyboard$Events$on,
-					0,
-					_List_fromArray(
-						[
-							_Utils_Tuple2($ohanhi$keyboard$Keyboard$Enter, $author$project$MuchSelect$SelectHighlightedOption),
-							_Utils_Tuple2($ohanhi$keyboard$Keyboard$Escape, $author$project$MuchSelect$EscapeKeyInInputFilter),
-							_Utils_Tuple2($ohanhi$keyboard$Keyboard$ArrowUp, $author$project$MuchSelect$MoveHighlightedOptionUp),
-							_Utils_Tuple2($ohanhi$keyboard$Keyboard$ArrowDown, $author$project$MuchSelect$MoveHighlightedOptionDown)
-						]))
+					$elm_community$html_extra$Html$Attributes$Extra$attributeIf,
+					!$author$project$SelectionMode$isDisabled(selectionConfig),
+					A2(
+						$robinheghan$keyboard_events$Keyboard$Events$on,
+						0,
+						_List_fromArray(
+							[
+								_Utils_Tuple2($ohanhi$keyboard$Keyboard$Enter, $author$project$MuchSelect$SelectHighlightedOption),
+								_Utils_Tuple2($ohanhi$keyboard$Keyboard$Escape, $author$project$MuchSelect$EscapeKeyInInputFilter),
+								_Utils_Tuple2($ohanhi$keyboard$Keyboard$ArrowUp, $author$project$MuchSelect$MoveHighlightedOptionUp),
+								_Utils_Tuple2($ohanhi$keyboard$Keyboard$ArrowDown, $author$project$MuchSelect$MoveHighlightedOptionDown)
+							])))
 				]),
 			_List_Nil);
 		var hasErrors = $author$project$OptionsUtilities$hasAnyValidationErrors(options);
@@ -15214,27 +15246,40 @@ var $author$project$MuchSelect$multiSelectViewCustomHtml = F4(
 				[
 					$elm$html$Html$Attributes$id('value-casing'),
 					A3($author$project$MuchSelect$valueCasingPartsAttribute, selectionConfig, hasErrors, hasPendingValidation),
-					$elm$html$Html$Events$onMouseDown($author$project$MuchSelect$NoOp),
-					$elm$html$Html$Events$onMouseUp($author$project$MuchSelect$BringInputInFocus),
-					$elm$html$Html$Events$onFocus($author$project$MuchSelect$BringInputInFocus),
 					A2(
-					$robinheghan$keyboard_events$Keyboard$Events$on,
-					0,
-					_List_fromArray(
-						[
-							_Utils_Tuple2($ohanhi$keyboard$Keyboard$Delete, $author$project$MuchSelect$DeleteKeydownForMultiSelect),
-							_Utils_Tuple2($ohanhi$keyboard$Keyboard$Backspace, $author$project$MuchSelect$DeleteKeydownForMultiSelect)
-						])),
+					$elm_community$html_extra$Html$Attributes$Extra$attributeIf,
+					!$author$project$SelectionMode$isDisabled(selectionConfig),
+					$elm$html$Html$Events$onMouseDown($author$project$MuchSelect$NoOp)),
+					A2(
+					$elm_community$html_extra$Html$Attributes$Extra$attributeIf,
+					!$author$project$SelectionMode$isDisabled(selectionConfig),
+					$elm$html$Html$Events$onMouseUp($author$project$MuchSelect$BringInputInFocus)),
+					A2(
+					$elm_community$html_extra$Html$Attributes$Extra$attributeIf,
+					!$author$project$SelectionMode$isDisabled(selectionConfig),
+					$elm$html$Html$Events$onFocus($author$project$MuchSelect$BringInputInFocus)),
+					A2(
+					$elm_community$html_extra$Html$Attributes$Extra$attributeIf,
+					!$author$project$SelectionMode$isDisabled(selectionConfig),
+					A2(
+						$robinheghan$keyboard_events$Keyboard$Events$on,
+						0,
+						_List_fromArray(
+							[
+								_Utils_Tuple2($ohanhi$keyboard$Keyboard$Delete, $author$project$MuchSelect$DeleteKeydownForMultiSelect),
+								_Utils_Tuple2($ohanhi$keyboard$Keyboard$Backspace, $author$project$MuchSelect$DeleteKeydownForMultiSelect)
+							]))),
 					$author$project$MuchSelect$tabIndexAttribute(
 					$author$project$SelectionMode$isDisabled(selectionConfig)),
 					$elm$html$Html$Attributes$classList(
 					A3($author$project$MuchSelect$valueCasingClassList, selectionConfig, hasOptionSelected, false))
 				]),
 			_Utils_ap(
-				A2(
+				A3(
 					$author$project$MuchSelect$optionsToValuesHtml,
 					options,
-					$author$project$SelectionMode$getSingleItemRemoval(selectionConfig)),
+					$author$project$SelectionMode$getSingleItemRemoval(selectionConfig),
+					$author$project$SelectionMode$getInteractionState(selectionConfig)),
 				_List_fromArray(
 					[
 						inputFilter,
@@ -15440,10 +15485,6 @@ var $author$project$MuchSelect$multiSelectView = F4(
 		} else {
 			return A3($author$project$MuchSelect$multiSelectViewDataset, selectionMode, options, rightSlot);
 		}
-	});
-var $elm_community$html_extra$Html$Attributes$Extra$attributeIf = F2(
-	function (condition, attr) {
-		return condition ? attr : $elm_community$html_extra$Html$Attributes$Extra$empty;
 	});
 var $author$project$Option$optionToValueLabelTuple = function (option) {
 	return _Utils_Tuple2(
