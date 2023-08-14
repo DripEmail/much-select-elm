@@ -19,7 +19,6 @@ module SelectionMode exposing
     , getSingleItemRemoval
     , getTransformAndValidate
     , hasPlaceholder
-    , initDomStateCache
     , isDisabled
     , isEventsOnly
     , isFocused
@@ -293,36 +292,6 @@ makeMultiSelectOutputStyle outputStyle isEventsOnly_ allowCustomOptions enableMu
                         AllowLightDomChanges
             in
             Ok (MultiSelectDataList eventsMode transformAndValidate)
-
-
-initDomStateCache : SelectionConfig -> DomStateCache
-initDomStateCache selectionConfig =
-    { allowCustomOptions =
-        case getCustomOptions selectionConfig of
-            OutputStyle.AllowCustomOptions maybeHint _ ->
-                case maybeHint of
-                    Just hint ->
-                        DomStateCache.CustomOptionsAllowedWithHint hint
-
-                    Nothing ->
-                        DomStateCache.CustomOptionsAllowed
-
-            OutputStyle.NoCustomOptions ->
-                DomStateCache.CustomOptionsNotAllowed
-    , outputStyle =
-        case getOutputStyle selectionConfig of
-            CustomHtml ->
-                DomStateCache.OutputStyleCustomHtml
-
-            Datalist ->
-                DomStateCache.OutputStyleDatalist
-    , disabled =
-        if isDisabled selectionConfig then
-            DomStateCache.HasDisabledAttribute
-
-        else
-            DomStateCache.NoDisabledAttribute
-    }
 
 
 isSingleSelect : SelectionConfig -> Bool

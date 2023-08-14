@@ -894,6 +894,15 @@ update msg model =
                         model.selectionConfig
                         (selectedOptions model.options)
                         bool
+                , domStateCache =
+                    DomStateCache.updateLoadingAttribute
+                        (if bool then
+                            DomStateCache.HasLoadingAttribute
+
+                         else
+                            DomStateCache.NoLoadingAttribute
+                        )
+                        model.domStateCache
               }
             , NoEffect
             )
@@ -925,6 +934,15 @@ update msg model =
                     setDropdownStyle
                         newDropdownStyle
                         model.selectionConfig
+                , domStateCache =
+                    DomStateCache.updateDropdownFooterAttribute
+                        (if bool then
+                            DomStateCache.HasDropdownFooterAttribute
+
+                         else
+                            DomStateCache.NoDropdownFooterAttribute
+                        )
+                        model.domStateCache
               }
             , NoEffect
             )
@@ -1000,6 +1018,16 @@ update msg model =
                                 (newSelectionConfig |> SelectionMode.getOutputStyle)
                                 (newSelectionConfig |> SelectionMode.getSelectionMode)
                                 (model.options |> selectedOptions)
+                        , domStateCache =
+                            DomStateCache.updateOutputStyle
+                                (case outputStyle of
+                                    Datalist ->
+                                        DomStateCache.OutputStyleDatalist
+
+                                    CustomHtml ->
+                                        DomStateCache.OutputStyleCustomHtml
+                                )
+                                model.domStateCache
                       }
                     , Batch
                         [ FetchOptionsFromDom
@@ -1490,6 +1518,10 @@ update msg model =
                                         model.selectionConfig
                                         (selectedOptions model.options)
                                         False
+                                , domStateCache =
+                                    DomStateCache.updateLoadingAttribute
+                                        DomStateCache.NoLoadingAttribute
+                                        model.domStateCache
                               }
                             , NoEffect
                             )
@@ -1502,6 +1534,10 @@ update msg model =
                                         model.selectionConfig
                                         (selectedOptions model.options)
                                         True
+                                , domStateCache =
+                                    DomStateCache.updateLoadingAttribute
+                                        DomStateCache.HasLoadingAttribute
+                                        model.domStateCache
                               }
                             , NoEffect
                             )
@@ -1704,6 +1740,10 @@ update msg model =
                 "show-dropdown-footer" ->
                     ( { model
                         | selectionConfig = setDropdownStyle ShowFooter model.selectionConfig
+                        , domStateCache =
+                            DomStateCache.updateDropdownFooterAttribute
+                                DomStateCache.HasDropdownFooterAttribute
+                                model.domStateCache
                       }
                     , NoEffect
                     )
@@ -1757,6 +1797,10 @@ update msg model =
                                 model.selectionConfig
                                 (model.options |> selectedOptions)
                                 False
+                        , domStateCache =
+                            DomStateCache.updateLoadingAttribute
+                                DomStateCache.NoLoadingAttribute
+                                model.domStateCache
                       }
                     , NoEffect
                     )
@@ -1869,6 +1913,10 @@ update msg model =
                 "show-dropdown-footer" ->
                     ( { model
                         | selectionConfig = setDropdownStyle NoFooter model.selectionConfig
+                        , domStateCache =
+                            DomStateCache.updateDropdownFooterAttribute
+                                DomStateCache.NoDropdownFooterAttribute
+                                model.domStateCache
                       }
                     , NoEffect
                     )
@@ -3510,17 +3558,9 @@ init flags =
 
                 Datalist ->
                     OptionsUtilities.organizeNewDatalistOptions optionsWithInitialValueSelected
-    in
-    ( { initialValue = initialValues
-      , selectionConfig = selectionConfig
-      , options = optionsWithInitialValueSelectedSorted
-      , optionSort = stringToOptionSort flags.optionSort |> Result.withDefault NoSorting
-      , searchStringBounce = Bounce.init
-      , searchStringDebounceLength = getDebouceDelayForSearch (List.length optionsWithInitialValueSelectedSorted)
-      , searchString = SearchString.reset
-      , searchStringNonce = 0
-      , focusedIndex = 0
-      , rightSlot =
+
+        rightSlot : RightSlot
+        rightSlot =
             if flags.loading then
                 ShowLoadingIndicator
 
@@ -3546,10 +3586,62 @@ init flags =
                             SelectionMode.MultiSelect ->
                                 updateRightSlotForDatalist optionsWithInitialValueSelectedSorted
 
+        initDomStateCache : SelectionConfig -> RightSlot.RightSlot -> DomStateCache
+        initDomStateCache selectionConfig_ rightSlot_ =
+            { allowCustomOptions =
+                case SelectionMode.getCustomOptions selectionConfig_ of
+                    OutputStyle.AllowCustomOptions maybeHint _ ->
+                        case maybeHint of
+                            Just hint ->
+                                DomStateCache.CustomOptionsAllowedWithHint hint
+
+                            Nothing ->
+                                DomStateCache.CustomOptionsAllowed
+
+                    OutputStyle.NoCustomOptions ->
+                        DomStateCache.CustomOptionsNotAllowed
+            , outputStyle =
+                case getOutputStyle selectionConfig_ of
+                    CustomHtml ->
+                        DomStateCache.OutputStyleCustomHtml
+
+                    Datalist ->
+                        DomStateCache.OutputStyleDatalist
+            , disabled =
+                if isDisabled selectionConfig_ then
+                    DomStateCache.HasDisabledAttribute
+
+                else
+                    DomStateCache.NoDisabledAttribute
+            , loading =
+                if RightSlot.isLoading rightSlot_ then
+                    DomStateCache.HasLoadingAttribute
+
+                else
+                    DomStateCache.NoLoadingAttribute
+            , showDropdownFooter =
+                if showDropdownFooter selectionConfig_ then
+                    DomStateCache.HasDropdownFooterAttribute
+
+                else
+                    DomStateCache.NoDropdownFooterAttribute
+            }
+    in
+    ( { initialValue = initialValues
+      , selectionConfig = selectionConfig
+      , options = optionsWithInitialValueSelectedSorted
+      , optionSort = stringToOptionSort flags.optionSort |> Result.withDefault NoSorting
+      , searchStringBounce = Bounce.init
+      , searchStringDebounceLength = getDebouceDelayForSearch (List.length optionsWithInitialValueSelectedSorted)
+      , searchString = SearchString.reset
+      , searchStringNonce = 0
+      , focusedIndex = 0
+      , rightSlot = rightSlot
+
       -- TODO Should the value casing's initial values be passed in as flags?
       , valueCasing = ValueCasing 100 45
       , selectedValueEncoding = selectedValueEncoding
-      , domStateCache = SelectionMode.initDomStateCache selectionConfig
+      , domStateCache = initDomStateCache selectionConfig rightSlot
       }
     , batch
         [ errorEffect
