@@ -85,17 +85,6 @@ mockEventListeners =
     }
 
 
-
--- Helper function to count optgroup headers by checking rendered HTML length
--- Since optgroups with no options return empty lists, we can test by checking
--- if the groups were filtered out properly
-
-
-countNonEmptyGroups : List (Html msg) -> Int
-countNonEmptyGroups htmlList =
-    List.length htmlList
-
-
 suite : Test
 suite =
     describe "When we have a sorted list of options"
@@ -122,7 +111,6 @@ suite =
         , test "hide optgroup headers when all options in the group are selected" <|
             \_ ->
                 let
-                    -- Create options where all Hand Tools are selected
                     selectedScrewDriver =
                         newSelectedOption 0 "Screw Driver" Nothing |> setGroupWithString "Hand Tool"
 
@@ -135,7 +123,6 @@ suite =
                     selectedChisel =
                         newSelectedOption 3 "Chisel" Nothing |> setGroupWithString "Hand Tool"
 
-                    -- Power Tools remain unselected
                     unselectedDrill =
                         drill
 
@@ -152,21 +139,17 @@ suite =
                             , selectedChisel
                             ]
 
-                    -- Get only unselected options (what would show in dropdown)
                     unselectedOnlyOptions =
                         DropdownOptions.figureOutWhichOptionsToShowInTheDropdownThatAreNotSelected
                             defaultSelectionConfig
                             allOptions
 
-                    -- Render the HTML
                     renderedHtml =
                         GroupedDropdownOptions.groupOptionsInOrder unselectedOnlyOptions
                             |> GroupedDropdownOptions.optionGroupsToHtml mockEventListeners defaultSelectionConfig
 
-                    -- Count HTML elements - should only have Power Tool options, Hand Tool group should be filtered out
                     elementCount =
-                        countNonEmptyGroups renderedHtml
+                        List.length renderedHtml
                 in
-                -- Should only have elements from Power Tool group (header + 2 options = 3), Hand Tool group should be filtered out completely
                 Expect.equal 3 elementCount
         ]
