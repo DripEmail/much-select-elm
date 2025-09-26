@@ -63,39 +63,50 @@ optionGroupsToHtml dropdownItemEventListeners selectionConfig groupedDropdownOpt
 optionGroupToHtml : DropdownItemEventListeners msg -> SelectionConfig -> DropdownOptionsGroup -> List (Html msg)
 optionGroupToHtml dropdownItemEventListeners selectionMode dropdownOptionsGroup =
     let
-        optionGroupHtml =
-            case dropdownOptionsGroup |> getOptions |> DropdownOptions.maybeFirstOptionSearchFilter of
-                Just optionSearchFilter ->
-                    case dropdownOptionsGroup |> getOptionsGroup |> OptionGroup.toString of
-                        "" ->
-                            text ""
+        options =
+            getOptions dropdownOptionsGroup
 
-                        _ ->
-                            div
-                                [ class "optgroup"
-                                , Html.Attributes.attribute "part" "dropdown-optgroup"
-                                ]
-                                [ span [ class "optgroup-header" ]
-                                    (tokensToHtml optionSearchFilter.groupTokens)
-                                ]
-
-                Nothing ->
-                    case dropdownOptionsGroup |> getOptionsGroup |> OptionGroup.toString of
-                        "" ->
-                            text ""
-
-                        optionGroupAsString ->
-                            div
-                                [ class "optgroup"
-                                , Html.Attributes.attribute "part" "dropdown-optgroup"
-                                ]
-                                [ span [ class "optgroup-header" ]
-                                    [ text
-                                        optionGroupAsString
-                                    ]
-                                ]
+        optionsHtml =
+            optionsToCustomHtml dropdownItemEventListeners selectionMode options
     in
-    optionGroupHtml :: optionsToCustomHtml dropdownItemEventListeners selectionMode (getOptions dropdownOptionsGroup)
+    if DropdownOptions.isEmpty options then
+        []
+
+    else
+        let
+            optionGroupHtml =
+                case options |> DropdownOptions.maybeFirstOptionSearchFilter of
+                    Just optionSearchFilter ->
+                        case dropdownOptionsGroup |> getOptionsGroup |> OptionGroup.toString of
+                            "" ->
+                                text ""
+
+                            _ ->
+                                div
+                                    [ class "optgroup"
+                                    , Html.Attributes.attribute "part" "dropdown-optgroup"
+                                    ]
+                                    [ span [ class "optgroup-header" ]
+                                        (tokensToHtml optionSearchFilter.groupTokens)
+                                    ]
+
+                    Nothing ->
+                        case dropdownOptionsGroup |> getOptionsGroup |> OptionGroup.toString of
+                            "" ->
+                                text ""
+
+                            optionGroupAsString ->
+                                div
+                                    [ class "optgroup"
+                                    , Html.Attributes.attribute "part" "dropdown-optgroup"
+                                    ]
+                                    [ span [ class "optgroup-header" ]
+                                        [ text
+                                            optionGroupAsString
+                                        ]
+                                    ]
+        in
+        optionGroupHtml :: optionsHtml
 
 
 dropdownOptionsToDatalistHtml : DropdownOptions -> Html msg
