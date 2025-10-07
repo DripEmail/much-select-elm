@@ -564,6 +564,11 @@ widget = "include"
 file = "examples/ten-thousand-options.html"
 selector = ".example #ten-thousand-options"
 
+[widgets.hundred-thousand-options]
+widget = "include"
+file = "examples/hundred-thousand-options.html"
+selector = ".example #hundred-thousand-options"
+
 [widgets.update-options-add-options-to-a-much-select]
 widget = "include"
 file = "examples/update-options-add-options-to-a-much-select.html"
